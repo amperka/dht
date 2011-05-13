@@ -99,6 +99,13 @@ function(LOAD_BOARD_SETTINGS)
                 set(ARDUINO_SETTING_NAME ${ARDUINO_SETTING_NAME}.${BOARD_SUBSETTING})
             endif()
 
+            # replace vague stk500 upload protocol with concrete stk500v1
+            if(BOARD_SETTING STREQUAL "upload" AND BOARD_SUBSETTING STREQUAL "protocol")
+                if(SETTING_VALUE STREQUAL "stk500")
+                    set(SETTING_VALUE "stk500v1")
+                endif()
+            endif()
+
             # Save setting value
             set(${ARDUINO_SETTING_NAME} ${SETTING_VALUE} CACHE INTERNAL "Arduino ${BOARD_ID} Board setting")
             
@@ -553,8 +560,7 @@ if(NOT ARDUINO_FOUND)
     include(FindPackageHandleStandardArgs)
     find_package_handle_standard_args(Arduino
                                       REQUIRED_VARS ARDUINO_SDK_PATH
-                                                    ARDUINO_SDK_VERSION
-                                      VERSION_VAR ARDUINO_SDK_VERSION)
+                                                    ARDUINO_SDK_VERSION)
 
 
      mark_as_advanced(ARDUINO_CORES_PATH
