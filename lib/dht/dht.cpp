@@ -10,6 +10,7 @@ void DHT::attach(int analogPin)
 
 DHTError DHT::update()
 {
+    _lastError = DHT_ERROR_OK;
     byte res;
 
     // prepare sensor for reading
@@ -53,18 +54,18 @@ DHTError DHT::update()
     // the sensor
     for (byte i = 0; i < 5; i++)
         if (!readByte(_data + i))
-            return DHT_ERROR_READ_TIMEOUT;
+            _lastError = DHT_ERROR_READ_TIMEOUT;
 
-    // Next: restore pin to output duties
-    pinMode(_pin, OUTPUT); //Was: DDRC |= _BV(dht_PIN);
-    digitalWrite(_pin, HIGH); //Was: PORTC |= _BV(dht_PIN);
+    // Restore pin to output duties
+    pinMode(_pin, OUTPUT); // was: DDRC |= _BV(dht_PIN);
+    digitalWrite(_pin, HIGH); // was: PORTC |= _BV(dht_PIN);
 
-    // See if data received consistent with checksum received
-    byte checkSum = _data[0] + _data[1] + _data[2] + _data[3];
-    if (_data[4] != checkSum)
-        _lastError = DHT_ERROR_CHECKSUM_FAILURE;
-    else
-        _lastError = DHT_ERROR_OK;
+    if (!_lastError) {
+        // See if data received consistent with checksum received
+        byte checkSum = _data[0] + _data[1] + _data[2] + _data[3];
+        if (_data[4] != checkSum)
+            _lastError = DHT_ERROR_CHECKSUM_FAILURE;
+    }
 
     return _lastError;
 }
