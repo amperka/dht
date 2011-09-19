@@ -1,4 +1,8 @@
 
+// If you're using the library from Arduino IDE,
+// replace following two includes with a single
+//
+//#include <dht.h>
 #include <WProgram.h>
 #include <dht/dht.h>
 
