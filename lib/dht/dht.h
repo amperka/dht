@@ -1,14 +1,13 @@
 
 #include <WProgram.h>
 
-#define ANALOG_PIN_OFFSET 14
-
 enum DHTError
 {
     DHT_ERROR_OK = 0,
     DHT_ERROR_START_FAILED_1 = 1,
     DHT_ERROR_START_FAILED_2 = 2,
-    DHT_ERROR_CHECKSUM_FAILURE = 3,
+    DHT_ERROR_READ_TIMEOUT = 3,
+    DHT_ERROR_CHECKSUM_FAILURE = 4,
 };
 
 class DHT
@@ -19,16 +18,14 @@ class DHT
 
         byte getTemperatureInt() const;
         byte getTemperatureFrac() const;
-        float getTemperature() const;
 
         byte getHumidityInt() const;
         byte getHumidityFrac() const;
-        float getHumidity() const;
 
         DHTError getLastError() const { return _lastError; }
 
     private:
-        byte readByte() const;
+        bool readByte(byte* out) const;
 
     private:
         int _pin;

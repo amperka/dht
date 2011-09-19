@@ -7,7 +7,7 @@ DHT sensor = DHT();
 void setup()
 {
     Serial.begin(9600);
-    sensor.attach(0);
+    sensor.attach(A0);
     delay(1000); // wait before accessing the sensor
 }
 
@@ -28,6 +28,9 @@ void loop()
         case DHT_ERROR_START_FAILED_2:
             Serial.println("Error: start failed (stage 2)");
             break;
+        case DHT_ERROR_READ_TIMEOUT:
+            Serial.println("Error: read timeout");
+            break;
         case DHT_ERROR_CHECKSUM_FAILURE:
             Serial.println("Error: checksum error");
             break;
@@ -35,4 +38,3 @@ void loop()
 
     delay(2000);
 }
-

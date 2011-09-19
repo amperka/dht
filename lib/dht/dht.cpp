@@ -3,7 +3,7 @@
 
 void DHT::attach(int analogPin)
 {
-    _pin = analogPin + ANALOG_PIN_OFFSET;
+    _pin = analogPin;
     pinMode(_pin, OUTPUT);
     digitalWrite(_pin, HIGH);
 }
@@ -16,7 +16,8 @@ DHTError DHT::update()
     digitalWrite(_pin, LOW);
     delay(18 + 5);
     digitalWrite(_pin, HIGH);
-    // DHT22 datasheet says host should keep line high 20-40us, 
+    
+    // DHT datasheet says host should keep line high 20-40us, 
     // then watch for sensor taking line low. 
     // That low should last 80us. Acknowledges "start read
     // and report" command.
@@ -42,28 +43,24 @@ DHTError DHT::update()
         return _lastError;
     }
 
-    /*After 80us low, the line should be taken high for 80us by the
-      sensor. The low following that high is the start of the first
-      bit of the forty to come. The routine "read_dht_dat()"
-      expects to be called with the system already into this low.*/
+    // After 80us low, the line should be taken high for 80us by the
+    // sensor. The low following that high is the start of the first
+    // bit of the forty to come. The method readByte()
+    // expects to be called with the system already into this low.
     delayMicroseconds(80);
-    //now ready for data reception... pick up the 5 bytes coming from
-    //   the sensor
+
+    // now ready for data reception... pick up the 5 bytes coming from
+    // the sensor
     for (byte i = 0; i < 5; i++)
-        _data[i] = readByte();
+        if (!readByte(_data + i))
+            return DHT_ERROR_READ_TIMEOUT;
 
-    //Next: restore pin to output duties
-    pinMode(_pin, OUTPUT);//Was: DDRC |= _BV(dht_PIN);
-    //N.B.: Using DDRC put restrictions on value of dht_pin
+    // Next: restore pin to output duties
+    pinMode(_pin, OUTPUT); //Was: DDRC |= _BV(dht_PIN);
+    digitalWrite(_pin, HIGH); //Was: PORTC |= _BV(dht_PIN);
 
-    //Next: Make data line high again, as output from Arduino
-    digitalWrite(_pin, HIGH);//Was: PORTC |= _BV(dht_PIN);
-    //N.B.: Using PORTC put restrictions on value of dht_pin
-
-    //Next see if data received consistent with checksum received
+    // See if data received consistent with checksum received
     byte checkSum = _data[0] + _data[1] + _data[2] + _data[3];
-    /*Condition in following "if" says "if fifth byte from sensor
-      not the same as the sum of the first four..."*/
     if (_data[4] != checkSum)
         _lastError = DHT_ERROR_CHECKSUM_FAILURE;
     else
@@ -72,42 +69,39 @@ DHTError DHT::update()
     return _lastError;
 }
 
-byte DHT::readByte() const
+bool DHT::readByte(byte* out) const
 {
-    //Collect 8 bits from datastream, return them interpreted
-    //as a byte. I.e. if 0000.0101 is sent, return decimal 5.
+    // Collect 8 bits from datastream, return them interpreted
+    // as a byte. I.e. if 0000.0101 is sent, return decimal 5.
 
-    //Code expects the system to have recently entered the
-    //dataline low condition at the start of every data bit's
-    //transmission BEFORE this function is called.
-
-    byte result = 0;
+    unsigned long numloops = 0;
+    unsigned long maxloops = microsecondsToClockCycles(100) / 16;
+    *out = 0;
     for (byte i = 0; i < 8; i++) {
-        //We enter this during the first start bit (low for 50uS) of the byte
-        //Next: wait until pin goes high
+        // We enter this during the first start bit (low for 50uS) of the byte
+        // Wait until pin goes high
+        numloops = 0;
         while (digitalRead(_pin) == LOW)
-            ;
-        //signalling end of start of bit's transmission.
+            if (++numloops == maxloops)
+                return false;
 
-        //Dataline will now stay high for 27 or 70 uS, depending on
-        //whether a 0 or a 1 is being sent, respectively.
-        delayMicroseconds(30);//AFTER pin is high, wait further period, to be
-        //into the part of the timing diagram where a 0 or a 1 denotes
-        //the datum being send. The "further period" was 30uS in the software
-        //that this has been created from. I believe that a higher number
-        //(45?) would be more appropriate.
+        // Dataline will now stay high for 27 or 70 uS, depending on
+        // whether a 0 or a 1 is being sent, respectively. Take to
+        // a middle of that period to read the value
+        delayMicroseconds(45);
 
-        //Next: Wait while pin still high
         if (digitalRead(_pin) == HIGH)
-            result |= 1 << (7 - i);// "add" (not just addition) the 1
-        //to the growing byte
-        //Next wait until pin goes low again, which signals the START
-        //of the NEXT bit's transmission.
+            *out |= 1 << (7 - i); // set subsequent bit
+
+        // Wait until pin goes low again, which signals the START
+        // of the NEXT bit's transmission.
+        numloops = 0;
         while (digitalRead(_pin) == HIGH)
-            ;
+            if (++numloops == maxloops)
+                return false;
     }
 
-    return result;
+    return true;
 }
 
 byte DHT::getTemperatureInt() const
@@ -120,11 +114,6 @@ byte DHT::getTemperatureFrac() const
     return _data[3];
 }
 
-float DHT::getTemperature() const
-{
-    return (float)getTemperatureInt() + (float)getTemperatureFrac() / 100.f;
-}
-
 byte DHT::getHumidityInt() const
 {
     return _data[0];
@@ -133,9 +122,4 @@ byte DHT::getHumidityInt() const
 byte DHT::getHumidityFrac() const
 {
     return _data[1];
-}
-
-float DHT::getHumidity() const
-{
-    return (float)getHumidityInt() + (float)getHumidityFrac() / 100.f;
 }
