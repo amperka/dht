@@ -1,7 +1,7 @@
 
 #include "dht.h"
 
-void DHT::attach(int analogPin)
+void DHT::attach(int pin)
 {
     _pin = analogPin;
     pinMode(_pin, OUTPUT);

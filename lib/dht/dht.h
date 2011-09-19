@@ -13,7 +13,7 @@ enum DHTError
 class DHT
 {
     public:
-        void attach(int analogPin);
+        void attach(int pin);
         DHTError update();
 
         byte getTemperatureInt() const;
