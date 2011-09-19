@@ -3,7 +3,7 @@
 
 void DHT::attach(int pin)
 {
-    _pin = analogPin;
+    _pin = pin;
     pinMode(_pin, OUTPUT);
     digitalWrite(_pin, HIGH);
 }
