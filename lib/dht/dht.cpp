@@ -72,13 +72,15 @@ DHTError DHT::update()
 
 bool DHT::readByte(byte* out) const
 {
+    // Restrict waiting to prevent hanging
+    unsigned long numloops = 0;
+    unsigned long maxloops = microsecondsToClockCycles(100) / 16;
+
     // Collect 8 bits from datastream, return them interpreted
     // as a byte. I.e. if 0000.0101 is sent, return decimal 5.
 
-    unsigned long numloops = 0;
-    unsigned long maxloops = microsecondsToClockCycles(100) / 16;
-    *out = 0;
-    for (byte i = 0; i < 8; i++) {
+    byte result = 0;
+    for (byte i = 8; i--; ) {
         // We enter this during the first start bit (low for 50uS) of the byte
         // Wait until pin goes high
         numloops = 0;
@@ -92,7 +94,7 @@ bool DHT::readByte(byte* out) const
         delayMicroseconds(45);
 
         if (digitalRead(_pin) == HIGH)
-            *out |= 1 << (7 - i); // set subsequent bit
+            result |= 1 << i; // set subsequent bit
 
         // Wait until pin goes low again, which signals the START
         // of the NEXT bit's transmission.
@@ -102,6 +104,7 @@ bool DHT::readByte(byte* out) const
                 return false;
     }
 
+    *out = result;
     return true;
 }
 
