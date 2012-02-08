@@ -1,5 +1,16 @@
 
+#ifndef DHT_H
+#define DHT_H
+
+#ifndef ARDUINO
+#error "Arduino version not defined"
+#endif
+
+#if ARDUINO >= 100
+#include <Arduino.h>
+#else
 #include <WProgram.h>
+#endif
 
 enum DHTError
 {
@@ -32,3 +43,5 @@ class DHT
         byte _data[5];
         DHTError _lastError;
 };
+
+#endif
