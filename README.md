@@ -4,6 +4,8 @@ Introduction
 This is an Arduino-library for easy reading of temperature/humidity sensors
 based on DHT11, DHT22 (aka Aosong AM2302).
 
+The library is compatible with Arduino Software version 1.x as well as old 0.x.
+
 Authors
 -------
 
@@ -18,22 +20,18 @@ Installation and Usage
 
 Copy lib/dht directory to /path/to/your/arduino-ide/libraries
 
-Usage example is in src/main.cpp
+Usage example is in src/example.ino
 
-If you're on Linux and prefer to work in console:
+If you prefer to work in console and have [ino](http://inotool.org) installed:
 
     # checkout the library
     git clone git@github.com:amperka/dht.git
     cd dht
 
-    # prepare cmake-based build environment
-    mkdir build
-    cd build
-    cmake ..
-
-    # build, upload and run picocom as serial monitor
-    make upload
-    make example-serial
+    # build, upload and run serial monitor
+    ino build
+    ino upload
+    ino serial
 
 License
 -------

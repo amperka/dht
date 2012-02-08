@@ -1,27 +1,33 @@
 
-// If you're using the library from Arduino IDE,
-// replace following two includes with a single
-//
-//#include <dht.h>
-#include <WProgram.h>
-#include <dht/dht.h>
+// подключаем библиотеку
+#include <dht.h>
 
+// создаём объект-сенсор
 DHT sensor = DHT();
 
 void setup()
 {
     Serial.begin(9600);
+
+    // методом attach объявляем к какому контакту подключен
+    // сенсор. В нашем примере это нулевой аналоговый контакт
     sensor.attach(A0);
-    delay(1000); // wait before accessing the sensor
+    //
+    // после подачи питания ждём секунду до готовности сенсора к работе
+    delay(1000);
 }
 
 void loop()
 {
+    // метод update заставляет сенсор выдать текущие измерения
     sensor.update();
+
     switch (sensor.getLastError())
     {
         case DHT_ERROR_OK:
             char msg[128];
+            // данные последнего измерения можно считать соответствующими
+            // методами
             sprintf(msg, "Temperature = %dC, Humidity = %d%%", 
                     sensor.getTemperatureInt(), sensor.getHumidityInt());
             Serial.println(msg);
