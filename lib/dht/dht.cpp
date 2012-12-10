@@ -1,4 +1,3 @@
-
 #include "dht.h"
 
 void DHT::attach(int pin)
@@ -29,14 +28,17 @@ DHTError DHT::update()
     pinMode(_pin, INPUT);
     delayMicroseconds(40);
 
-    res = digitalRead(_pin);
-
-    if (res) {
-        _lastError = DHT_ERROR_START_FAILED_1;
-        return _lastError;
-    }
-
-    delayMicroseconds(80);
+    //**  fail
+    //* закоментировав эти строки я получил постоянный стабильный вывод данных!(также изменен таймаут)
+    //*res = digitalRead(_pin);
+    //*if (res) {
+    //*    _lastError = DHT_ERROR_START_FAILED_1;
+    //*    return _lastError;
+    //*}
+    //*delayMicroseconds(80);
+    //**
+    delayMicroseconds(70);
+    
     res = digitalRead(_pin);
 
     if (!res) {
